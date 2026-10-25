@@ -1,55 +1,51 @@
-# Cookie Cats A/B Testing Analysis
+# Cookie Cats A/B Test
 
-This repository contains a Jupyter notebook that analyzes the impact of moving the first gate in the Cookie Cats game from level 30 to level 40 on player retention and the average number of game sessions. The analysis is performed using an A/B test approach, with data provided in the `cookie_cats.txt` file.
+Does moving the first gate in the mobile game *Cookie Cats* from level 30 to level 40 improve engagement and retention?
+This notebook analyses a randomised experiment with **90,189 players** to find out.
 
-## Table of Contents
+## Result
 
-- [Introduction](#introduction)
-- [Dataset](#dataset)
-- [Steps of Analysis](#steps-of-analysis)
+| Metric | Gate at 30 | Gate at 40 | Difference | p (any difference) |
+|---|---|---|---|---|
+| Game rounds, first 14 days (mean) | 51.3 | 51.3 | −0.04 rounds | 0.051 (Mann–Whitney) |
+| 1-day retention | 44.8% | 44.2% | −0.59 pp | 0.074 |
+| **7-day retention** | **19.0%** | **18.2%** | **−0.82 pp** (95% CI −1.33 to −0.31) | **0.0016** |
 
-## Introduction
+- None of the targets (+5 rounds, +2 pp day-1 retention, +5 pp day-7 retention) was reached.
+- Moving the gate to level 40 **significantly lowered 7-day retention**.
+- **Recommendation: keep the first gate at level 30.**
 
-Cookie Cats is a popular mobile puzzle game developed by Tactile Entertainment. In this notebook, we analyze an A/B test where the first gate in the game was moved from level 30 to level 40. The primary goals are to determine if:
-1. The average number of game sessions has increased by 5 sessions.
-2. Player retention has increased by 2% after 1 day.
-3. Player retention has increased by 5% after 7 days.
+## Method
 
-## Dataset
+1. **Data checks:** duplicates, missing values, and a sample-ratio-mismatch test on the 50/50 split.
+2. **Outliers:** no IQR trimming, since that would remove the most engaged players and bias retention. One impossible value
+   (49,854 rounds in 14 days) is excluded from the game-rounds analysis only.
+3. **Power:** minimum detectable effect for the collected sample (≈ 0.9 pp for day-1, ≈ 0.7 pp for day-7 retention),
+   confirming the experiment could detect the target effects.
+4. **Tests**, all on the full dataset:
+   - Game rounds: bootstrap confidence interval for the difference in means, plus a Mann–Whitney U test.
+   - Retention: two-proportion z-tests, both two-sided (any difference) and one-sided against the target uplift,
+     with 95% confidence intervals.
+   - Bootstrap check of both retention differences.
+5. **Summary, recommendation and limitations.**
 
-The dataset `cookie_cats.txt` includes the following columns:
-- `userid`: Unique identifier for each player.
-- `version`: Indicates whether the player is in the control group (`gate_30`) or the treatment group (`gate_40`).
-- `sum_gamerounds`: The total number of game rounds played by the player during the first 14 days after installation.
-- `retention_1`: Whether the player returned and played the game 1 day after installation.
-- `retention_7`: Whether the player returned and played the game 7 days after installation.
+Targets are read as absolute percentage points; α = 0.05, power = 0.80.
 
-## Steps of Analysis
+## Run it
 
-### 1. Define the Problem
+```bash
+pip install -r requirements.txt
+jupyter notebook cookie-cats-a-b-testing.ipynb
+```
 
-We analyze the impact of moving the gate from level 30 to level 40 on player retention and game sessions.
+## Data
 
-### 2. General Analysis
+`cookie_cats.txt` (from the public Cookie Cats dataset on Kaggle):
 
-- Import and inspect the dataset.
-- Identify and remove duplicate user IDs.
-- Detect and remove outliers using the Interquartile Range (IQR) method.
-
-### 3. Question 1: Has the average number of game sessions increased by 5 sessions?
-
-- Define the control group (`gate_30`) and treatment group (`gate_40`).
-- Calculate and compare the average number of game sessions between the two groups using a two-sample t-test.
-
-### 4. Question 2: Has player retention increased by 2% after 1 day?
-
-- Define the control group (`gate_30`) and treatment group (`gate_40`).
-- Calculate the required sample size for detecting a 2% increase in retention using a z-test for proportions.
-- Conduct the z-test to compare retention rates after 1 day between the two groups.
-
-### 5. Question 3: Has player retention increased by 5% after 7 days?
-
-- Define the control group (`gate_30`) and treatment group (`gate_40`).
-- Calculate the required sample size for detecting a 5% increase in retention using a z-test for proportions.
-- Conduct a chi-square test to compare retention rates after 7 days between the two groups.
-
+| Column | Description |
+|---|---|
+| `userid` | Unique player ID |
+| `version` | `gate_30` (control) or `gate_40` (treatment) |
+| `sum_gamerounds` | Game rounds played in the first 14 days after install |
+| `retention_1` | Player returned 1 day after install |
+| `retention_7` | Player returned 7 days after install |
